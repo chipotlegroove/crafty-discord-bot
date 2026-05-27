@@ -9,6 +9,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+
+	requests "github.com/chipotlegroove/crafty-discord-bot/Requests"
 )
 
 type ServerStatus int
@@ -45,6 +47,10 @@ type ServerStatusData struct {
 
 type ServerStatusResponse struct {
 	Data ServerStatusData `json:"data"`
+}
+
+type ServerActionResponse struct {
+	Status string `json:"status"`
 }
 
 var (
@@ -148,4 +154,40 @@ func ServerIsRunning(serverID string) (bool, error) {
 	json.Unmarshal(body, &formattedResponse)
 
 	return formattedResponse.Data.Running, nil
+}
+
+func ExecuteAction(serverName string, action string) error {
+	servers, err := getServers()
+	if err != nil {
+		return fmt.Errorf("error getting servers: %w", err)
+	}
+
+	serverToStart := Server{}
+
+	for _, server := range servers.Data {
+		if server.ServerName == serverName {
+			serverToStart = server
+			break
+		}
+	}
+
+	if serverToStart == (Server{}) {
+		return fmt.Errorf("server not found")
+	}
+
+	requestURL := baseURL + "/servers/" + serverToStart.ServerID + "/action/" + action
+
+	responseBody, err := requests.ExecuteRequest("POST", requestURL, bearer)
+	if err != nil {
+		return fmt.Errorf("error while executing requests: %w", err)
+	}
+
+	var formattedResponse ServerActionResponse
+	json.Unmarshal(responseBody, &formattedResponse)
+
+	if formattedResponse.Status != "ok" {
+		return fmt.Errorf("error while executing action: %s", formattedResponse.Status)
+	}
+
+	return nil
 }

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
 	bot "github.com/chipotlegroove/crafty-discord-bot/Bot"
 	crafty "github.com/chipotlegroove/crafty-discord-bot/Crafty"
+	requests "github.com/chipotlegroove/crafty-discord-bot/Requests"
 	"github.com/joho/godotenv"
 )
 
@@ -22,15 +22,7 @@ func main() {
 
 	bot.Init(token)
 	crafty.Init(craftyAPIToken, craftyBaseURL)
-
-	servers, err := crafty.GetServersWithStatus()
-	if err != nil {
-		panic(err)
-	}
-
-	for _, server := range servers {
-		fmt.Printf("%s \t %s\n", server.ServerName, server.Status.Label())
-	}
+	requests.Init()
 
 	bot.Run()
 }
